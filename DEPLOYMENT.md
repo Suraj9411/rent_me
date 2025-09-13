@@ -23,35 +23,7 @@ After deploying the backend, update the `VITE_API_URL` environment variable in V
 
 ---
 
-## Backend Deployment (Railway)
-
-### 1. Deploy Backend to Railway
-
-1. **Go to [Railway](https://railway.app)**
-2. **Sign up/Login** with GitHub
-3. **Click "New Project"**
-4. **Select "Deploy from GitHub repo"**
-5. **Choose your repository**
-6. **Set Root Directory**: `api`
-7. **Add Environment Variables:**
-   ```
-   DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/rent?retryWrites=true&w=majority
-   JWT_SECRET_KEY=your-super-secret-jwt-key-here
-   CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
-   CLOUDINARY_API_KEY=your-cloudinary-api-key
-   CLOUDINARY_API_SECRET=your-cloudinary-api-secret
-   FRONTEND_URL=https://your-frontend-domain.vercel.app
-   PORT=8800
-   NODE_ENV=production
-   ```
-
-### 2. Get Backend URL
-
-After deployment, Railway will give you a URL like: `https://your-project-name.railway.app`
-
----
-
-## Alternative: Deploy Backend to Render
+## Backend Deployment (Render)
 
 ### 1. Deploy Backend to Render
 
@@ -63,8 +35,22 @@ After deployment, Railway will give you a URL like: `https://your-project-name.r
    - **Root Directory**: `api`
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
-6. **Add Environment Variables** (same as Railway)
+6. **Add Environment Variables:**
+   ```
+   DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/rent?retryWrites=true&w=majority
+   JWT_SECRET_KEY=your-super-secret-jwt-key-here
+   CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+   CLOUDINARY_API_KEY=your-cloudinary-api-key
+   CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+   FRONTEND_URL=https://your-frontend-domain.vercel.app
+   PORT=8800
+   NODE_ENV=production
+   ```
 7. **Click "Create Web Service"**
+
+### 2. Get Backend URL
+
+After deployment, Render will give you a URL like: `https://your-project-name.onrender.com`
 
 ---
 
@@ -72,10 +58,10 @@ After deployment, Railway will give you a URL like: `https://your-project-name.r
 
 ### Frontend (Vercel)
 ```
-VITE_API_URL=https://your-backend-url.railway.app
+VITE_API_URL=https://your-backend-url.onrender.com
 ```
 
-### Backend (Railway/Render)
+### Backend (Render)
 ```
 DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/rent?retryWrites=true&w=majority
 JWT_SECRET_KEY=your-super-secret-jwt-key-here
@@ -115,7 +101,7 @@ NODE_ENV=production
 1. **Update Frontend API URL**: After backend deployment, update `VITE_API_URL` in Vercel
 2. **Test the Application**: Make sure all features work
 3. **Set up Custom Domain** (optional): Add your custom domain in Vercel
-4. **Monitor**: Check logs in both Vercel and Railway/Render
+4. **Monitor**: Check logs in both Vercel and Render
 
 ---
 
@@ -129,5 +115,4 @@ NODE_ENV=production
 
 ### Support:
 - Vercel Docs: https://vercel.com/docs
-- Railway Docs: https://docs.railway.app
 - Render Docs: https://render.com/docs
