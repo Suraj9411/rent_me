@@ -1,0 +1,125 @@
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import authRoute from "./routes/auth.route.js";
+import postRoute from "./routes/post.route.js";
+import testRoute from "./routes/test.route.js";
+import userRoute from "./routes/user.route.js";
+import chatRoute from "./routes/chat.route.js";
+import messageRoute from "./routes/message.route.js";
+
+// Load environment variables
+dotenv.config();
+
+const app = express();
+const server = createServer(app);
+const PORT = process.env.PORT || 8800;
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
+// Socket.io setup
+const io = new Server(server, {
+  cors: {
+    origin: CLIENT_URL,
+    credentials: true
+  }
+});
+
+app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.use(express.json());
+app.use(cookieParser());
+
+app.use("/api/auth", authRoute);
+app.use("/api/users", userRoute);
+app.use("/api/posts", postRoute);
+app.use("/api/test", testRoute);
+app.use("/api/chats", chatRoute);
+app.use("/api/messages", messageRoute);
+
+// Socket.io logic
+let onlineUsers = [];
+
+const addUser = (userId, socketId) => {
+  onlineUsers = onlineUsers.filter((user) => user.userId !== userId);
+  onlineUsers.push({ userId, socketId });
+  console.log(`User ${userId} added with socket ${socketId}. Total online:`, onlineUsers.length);
+  io.emit("getOnlineUsers", onlineUsers.map(user => user.userId));
+};
+
+const removeUser = (socketId) => {
+  onlineUsers = onlineUsers.filter((user) => user.socketId !== socketId);
+  io.emit("getOnlineUsers", onlineUsers.map(user => user.userId));
+};
+
+const getUser = (userId) => {
+  return onlineUsers.find((user) => user.userId === userId);
+};
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+  
+  socket.on("newUser", (userId) => {
+    console.log(`New user joining: ${userId} with socket: ${socket.id}`);
+    addUser(userId, socket.id);
+    socket.emit("getOnlineUsers", onlineUsers.map(user => user.userId));
+    io.emit("getOnlineUsers", onlineUsers.map(user => user.userId));
+  });
+
+  socket.on("reconnectUser", (userId) => {
+    console.log(`User reconnecting: ${userId} with new socket: ${socket.id}`);
+    addUser(userId, socket.id);
+  });
+
+  socket.on("heartbeat", (userId) => {
+    const user = onlineUsers.find(u => u.userId === userId);
+    if (user && user.socketId === socket.id) {
+      console.log(`Heartbeat received from user ${userId}, keeping online`);
+      if (socket.disconnectTimeout) {
+        clearTimeout(socket.disconnectTimeout);
+      }
+    }
+  });
+
+  socket.on("sendMessage", ({ receiverId, data }) => {
+    console.log(`Sending message from socket ${socket.id} to user ${receiverId}`);
+    const receiver = getUser(receiverId);
+    if (receiver) {
+      console.log(`Receiver found with socket ${receiver.socketId}`);
+      io.to(receiver.socketId).emit("getMessage", data);
+    } else {
+      console.log(`Receiver ${receiverId} not found online`);
+    }
+  });
+
+  socket.on("logout", () => {
+    console.log(`User logout event received from socket ${socket.id}`);
+    removeUser(socket.id);
+    console.log("User removed from online list. Remaining online users:", onlineUsers.length);
+  });
+
+  socket.on("disconnect", () => {
+    socket.disconnectTimeout = setTimeout(() => {
+      const user = onlineUsers.find(u => u.socketId === socket.id);
+      if (user) {
+        console.log(`User ${user.userId} disconnected after timeout, removing from online list`);
+        removeUser(socket.id);
+      }
+    }, 30000);
+    
+    console.log("User disconnected:", socket.id);
+    console.log("Online users:", onlineUsers.length);
+  });
+});
+
+// Health check endpoint for deployment
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}!`);
+  console.log(`Client URL: ${CLIENT_URL}`);
+  console.log(`Socket.io server is also running on the same port!`);
+});
