@@ -17,7 +17,7 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 const PORT = process.env.PORT || 8800;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const CLIENT_URL = process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:5173";
 
 // Socket.io setup
 const io = new Server(server, {
@@ -110,6 +110,22 @@ io.on("connection", (socket) => {
     
     console.log("User disconnected:", socket.id);
     console.log("Online users:", onlineUsers.length);
+  });
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.status(200).json({ 
+    status: "OK", 
+    message: "Rent Me API Server is running!",
+    endpoints: {
+      health: "/health",
+      auth: "/api/auth",
+      posts: "/api/posts",
+      users: "/api/users",
+      chat: "/api/chat",
+      messages: "/api/messages"
+    }
   });
 });
 
