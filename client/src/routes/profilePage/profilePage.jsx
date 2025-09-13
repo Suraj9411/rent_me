@@ -1,6 +1,7 @@
 import Chat from "../../components/chat/Chat";
 import List from "../../components/list/List";
 import CompactList from "../../components/list/CompactList";
+import ErrorPage from "../../components/ErrorPage/ErrorPage";
 import apiRequest from "../../lib/apiRequest";
 import { Await, Link, useLoaderData, useNavigate } from "react-router-dom";
 import { Suspense, useContext, useState } from "react";
@@ -196,15 +197,14 @@ function ProfilePage() {
                   <Await
                     resolve={data.postResponse}
                     errorElement={
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Properties</h3>
-                        <p className="text-gray-600">There was a problem loading your properties. Please try again.</p>
-                      </div>
+                      <ErrorPage
+                        title="Authentication Required"
+                        message="Please log in to view your profile. Your session may have expired."
+                        statusCode="401"
+                        showRefresh={true}
+                        showBack={false}
+                        showHome={true}
+                      />
                     }
                   >
                     {(postResponse) => {

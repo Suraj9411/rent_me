@@ -27,7 +27,13 @@ const io = new Server(server, {
   }
 });
 
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.use(cors({ 
+  origin: CLIENT_URL, 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
+}));
 app.use(express.json());
 app.use(cookieParser());
 

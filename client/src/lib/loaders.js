@@ -40,6 +40,9 @@ export const profilePageLoader = async () => {
     });
   } catch (error) {
     console.error("Profile loader error:", error);
+    if (error.response?.status === 401) {
+      throw new Error("Authentication required. Please log in.");
+    }
     throw new Error("Failed to load profile data. Please try again.");
   }
 };
