@@ -39,24 +39,12 @@ function ChatPage() {
         }
       });
 
-      // Listen for custom new message event
-      const handleNewMessageEvent = (event) => {
-        console.log("Custom new message event received:", event.detail);
-        const messageData = event.detail;
-        if (messageData.chatId === id) {
-          setMessages((prev) => [...prev, messageData]);
-        }
-      };
-
-      window.addEventListener('newMessageReceived', handleNewMessageEvent);
-
       // Cleanup function
       return () => {
         if (socket && typeof socket.off === 'function') {
           socket.off("getOnlineUsers");
           socket.off("getMessage");
         }
-        window.removeEventListener('newMessageReceived', handleNewMessageEvent);
       };
     } else {
       console.log("Socket not available or not properly initialized");

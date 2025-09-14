@@ -98,18 +98,10 @@ function Chat({ chats }) {
       }
     };
 
-    if (chat && socket) {
-      socket.on("getMessage", (data) => {
-        if (chat.id === data.chatId) {
-          setChat((prev) => ({ ...prev, messages: [...prev.messages, data] }));
-          read();
-        }
-      });
+    if (chat) {
+      read();
     }
-    return () => {
-      socket.off("getMessage");
-    };
-  }, [socket, chat]);
+  }, [chat]);
 
   return (
     <div className="flex h-full">
