@@ -28,26 +28,17 @@ function ChatPage() {
     if (socket && typeof socket.on === 'function') {
       // Socket event listeners
       socket.on("getOnlineUsers", (users) => {
-        console.log("Received online users:", users);
-        console.log("Current user ID:", currentUser?.id);
         setOnlineUsers(users || []);
       });
 
       socket.on("getMessage", (data) => {
-        console.log("Socket received message:", data);
-        console.log("Current user ID:", currentUser?.id);
-        console.log("Message user ID:", data.userId);
-        console.log("Is from different user:", data.userId !== currentUser?.id);
-        
         if (data.chatId === id && data.userId !== currentUser?.id) {
           setMessages((prev) => {
             // Check if message already exists to prevent duplicates
             const exists = prev.some(msg => msg.id === data.id);
             if (exists) {
-              console.log("Socket message already exists, not adding duplicate");
               return prev;
             }
-            console.log("Adding socket message to state");
             return [...prev, data];
           });
         }
@@ -60,15 +51,12 @@ function ChatPage() {
           socket.off("getMessage");
         }
       };
-    } else {
-      console.log("Socket not available or not properly initialized");
     }
   }, [socket, id, currentUser]);
 
   // Listen for global online users updates
   useEffect(() => {
     const handleOnlineUsersUpdate = (event) => {
-      console.log("ChatPage - Received online users from global event:", event.detail);
       setOnlineUsers(event.detail || []);
     };
 
@@ -82,9 +70,7 @@ function ChatPage() {
   // Fallback: Periodic refresh of messages every 5 seconds if socket is not connected
   useEffect(() => {
     if (!isConnected && id) {
-      console.log("Socket not connected, setting up periodic message refresh");
       const interval = setInterval(() => {
-        console.log("Periodic refresh: fetching messages");
         fetchMessages();
       }, 5000); // Refresh every 5 seconds
 
@@ -161,7 +147,6 @@ function ChatPage() {
 
       // Refresh notifications since chat was opened (marks messages as read)
       if (typeof window !== 'undefined' && window.refreshNotifications) {
-        console.log("Chat opened, refreshing notifications");
         setTimeout(() => {
           window.refreshNotifications();
         }, 1000); // Small delay to ensure backend has processed the read status
@@ -178,15 +163,12 @@ function ChatPage() {
     try {
       setLoading(true);
       const res = await apiRequest.post(`/messages/${id}`, { desc: newMessage.trim() });
-      console.log("Message sent:", res.data);
       setMessages((prev) => {
         // Check if message already exists to prevent duplicates
         const exists = prev.some(msg => msg.id === res.data.id);
         if (exists) {
-          console.log("Message already exists, not adding duplicate");
           return prev;
         }
-        console.log("Adding new message to state");
         return [...prev, res.data];
       });
       setNewMessage("");

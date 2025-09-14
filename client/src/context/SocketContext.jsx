@@ -15,7 +15,6 @@ export const SocketContextProvider = ({ children }) => {
   useEffect(() => {
     try {
       const socketUrl = import.meta.env.VITE_API_URL || window.location.origin;
-      console.log("Initializing socket connection to:", socketUrl);
       
       const newSocket = io(socketUrl, {
         transports: ['websocket', 'polling'],
@@ -30,12 +29,10 @@ export const SocketContextProvider = ({ children }) => {
       setSocket(newSocket);
 
       newSocket.on("connect", () => {
-        console.log("Socket connected successfully with ID:", newSocket.id);
         setIsConnected(true);
         
         // If we have a current user, emit newUser immediately after connection
         if (currentUser) {
-          console.log("Emitting newUser immediately after connection for:", currentUser.id);
           newSocket.emit("newUser", currentUser.id);
         }
       });
@@ -46,23 +43,20 @@ export const SocketContextProvider = ({ children }) => {
       });
 
       newSocket.on("disconnect", (reason) => {
-        console.log("Socket disconnected:", reason);
         setIsConnected(false);
       });
 
       newSocket.on("reconnect", (attemptNumber) => {
-        console.log("Socket reconnected after", attemptNumber, "attempts");
         setIsConnected(true);
         
         // Re-emit newUser after reconnection
         if (currentUser) {
-          console.log("Re-emitting newUser after reconnection for:", currentUser.id);
           newSocket.emit("newUser", currentUser.id);
         }
       });
 
       newSocket.on("reconnect_attempt", (attemptNumber) => {
-        console.log("Socket reconnection attempt:", attemptNumber);
+        // Silent reconnection attempts
       });
 
       newSocket.on("reconnect_error", (error) => {
@@ -83,10 +77,6 @@ export const SocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (currentUser && socket && isConnected) {
-      console.log("Emitting newUser event for:", currentUser.id);
-      console.log("Socket connected:", socket.connected);
-      console.log("Socket ID:", socket.id);
-      
       // Emit newUser event
       socket.emit("newUser", currentUser.id);
 
@@ -102,7 +92,6 @@ export const SocketContextProvider = ({ children }) => {
 
       // Listen for online users updates
       const handleOnlineUsers = (users) => {
-        console.log("Received online users update:", users);
         setOnlineUsers(users || []);
         // Broadcast to all components that need online status
         if (typeof window !== 'undefined') {
@@ -121,7 +110,6 @@ export const SocketContextProvider = ({ children }) => {
       };
     } else if (!currentUser && socket) {
       // User logged out - emit logout event to remove from online users
-      console.log("User logged out, emitting logout event");
       socket.emit("logout");
     }
   }, [currentUser, socket, isConnected, fetch]);
@@ -131,7 +119,6 @@ export const SocketContextProvider = ({ children }) => {
     if (currentUser && socket && isConnected) {
       // Small delay to ensure socket is fully ready
       const timer = setTimeout(() => {
-        console.log("Re-emitting newUser after user change for:", currentUser.id);
         socket.emit("newUser", currentUser.id);
       }, 100);
       
@@ -144,7 +131,6 @@ export const SocketContextProvider = ({ children }) => {
     if (currentUser && socket && isConnected) {
       const heartbeat = setInterval(() => {
         if (socket.connected) {
-          console.log("Sending heartbeat to keep user online:", currentUser.id);
           socket.emit("heartbeat", currentUser.id);
         }
       }, 25000); // Every 25 seconds (before 30 second timeout)
