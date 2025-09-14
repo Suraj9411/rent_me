@@ -115,25 +115,25 @@ export const login = async (req, res) => {
 
     console.log("Setting cookie for user:", userInfo.username);
     
-    // Try multiple cookie configurations for better compatibility
+    // Use sameSite: 'lax' for better compatibility with blocked third-party cookies
     const cookieOptions = {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: 'lax', // More compatible with blocked third-party cookies
       maxAge: age,
       path: '/'
     };
     
     console.log("Cookie settings:", cookieOptions);
     
-    // Set the cookie
+    // Set the main cookie with lax settings
     res.cookie("token", token, cookieOptions);
     
-    // Also set a backup cookie with different settings
+    // Also set a backup cookie that JS can access
     res.cookie("token_backup", token, {
       httpOnly: false, // Not httpOnly so JS can access it
       secure: true,
-      sameSite: 'lax', // More permissive
+      sameSite: 'lax', // Same as main cookie
       maxAge: age,
       path: '/'
     });
@@ -172,11 +172,11 @@ export const verifyToken = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  // Clear both cookies
+  // Clear both cookies with lax settings
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
-    sameSite: 'none',
+    sameSite: 'lax',
     path: '/',
   });
   
