@@ -6,15 +6,11 @@ import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import apiRequest from "../../lib/apiRequest";
 import { useToast } from "../../hooks/use-toast";
-import ModernConfirmationDialog from "../../components/ui/modern-confirmation-dialog";
 
 function SinglePage() {
   const post = useLoaderData();
   const [saved, setSaved] = useState(post.isSaved);
   const [isLoading, setIsLoading] = useState(false);
-  const [showLocationDialog, setShowLocationDialog] = useState(false);
-  const [showAccuracyDialog, setShowAccuracyDialog] = useState(false);
-  const [locationData, setLocationData] = useState(null);
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -127,148 +123,78 @@ function SinglePage() {
     try {
       // Check if geolocation is supported
       if (!navigator.geolocation) {
+        // If geolocation not supported, open Google Maps without user location
+        const dest = `${post.latitude},${post.longitude}`;
+        const url = `https://www.google.com/maps/search/?api=1&query=${dest}`;
+        window.open(url, '_blank');
+        
         toast({
-          title: "Geolocation Not Supported",
-          description: "Geolocation is not supported by this browser.",
-          variant: "warning",
+          title: "Directions Opened",
+          description: "Google Maps opened with property location.",
+          variant: "success",
         });
         setIsLoading(false);
         return;
       }
 
-      // Get user's current location with high accuracy
+      // Get user's current location automatically
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,        // Use GPS if available
-          timeout: 30000,                  // Wait up to 30 seconds
-          maximumAge: 0                    // Force fresh location
+          timeout: 10000,                  // Wait up to 10 seconds
+          maximumAge: 300000               // Allow 5 minute old location
         });
       });
 
-      const { latitude, longitude, accuracy } = position.coords;
+      const { latitude, longitude } = position.coords;
       
       // Validate coordinates
       if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
         throw new Error("Invalid coordinates received");
       }
       
-      // Store location data for dialogs
-      setLocationData({ latitude, longitude, accuracy });
+      // Automatically open Google Maps with directions from user location to property
+      const origin = `${latitude},${longitude}`;
+      const dest = `${post.latitude},${post.longitude}`;
+      const url = `https://www.google.com/maps/dir/${origin}/${dest}`;
       
-      // Check location accuracy
-      if (accuracy > 100) { // If accuracy is worse than 100 meters
-        setShowAccuracyDialog(true);
-        setIsLoading(false);
-        return;
-      }
-
-      // Show location confirmation
-      setShowLocationDialog(true);
+      window.open(url, '_blank');
+      
+      toast({
+        title: "Directions Opened",
+        description: "Google Maps opened with directions from your location to the property.",
+        variant: "success",
+      });
+      
       setIsLoading(false);
       
     } catch (error) {
-      let errorMessage = "Failed to get your location.";
+      console.error("Location detection error:", error);
+      
+      // If location detection fails, still open Google Maps with property location
+      const dest = `${post.latitude},${post.longitude}`;
+      const url = `https://www.google.com/maps/search/?api=1&query=${dest}`;
+      window.open(url, '_blank');
+      
+      let errorMessage = "Could not detect your location, but opened Google Maps with property location.";
       
       if (error.code === error.PERMISSION_DENIED) {
-        errorMessage = 
-          "📍 Location permission denied!\n\n" +
-          "To fix this:\n" +
-          "1. Click the lock/info icon in your browser address bar\n" +
-          "2. Allow location access\n" +
-          "3. Refresh the page and try again\n\n" +
-          "Or try using a different browser.";
+        errorMessage = "Location permission denied. Please allow location access and try again. Opened Google Maps with property location.";
       } else if (error.code === error.POSITION_UNAVAILABLE) {
-        errorMessage = 
-          "📍 Location information unavailable!\n\n" +
-          "Possible solutions:\n" +
-          "1. Move to an area with better GPS signal\n" +
-          "2. Go outside if you're indoors\n" +
-          "3. Check your device location settings\n" +
-          "4. Try refreshing the page";
+        errorMessage = "Location unavailable. Opened Google Maps with property location.";
       } else if (error.code === error.TIMEOUT) {
-        errorMessage = 
-          "📍 Location request timed out!\n\n" +
-          "This usually means:\n" +
-          "1. GPS signal is weak\n" +
-          "2. You're in an area with poor signal\n" +
-          "3. Device is taking too long to get location\n\n" +
-          "Try moving to a different location or try again.";
-      } else if (error.message === "Invalid coordinates received") {
-        errorMessage = 
-          "📍 Invalid location data received!\n\n" +
-          "The location service returned invalid coordinates.\n" +
-          "Please try again or use the map to select a location manually.";
+        errorMessage = "Location request timed out. Opened Google Maps with property location.";
       }
       
       toast({
-        title: "Location Error",
+        title: "Directions Opened",
         description: errorMessage,
-        variant: "destructive",
+        variant: "success",
       });
       setIsLoading(false);
     }
   };
 
-  const handleLocationConfirm = () => {
-    if (!locationData || !locationData.latitude || !locationData.longitude) {
-      toast({
-        title: "Invalid Location",
-        description: "Location data is invalid. Please try again.",
-        variant: "destructive",
-      });
-      setShowLocationDialog(false);
-      setLocationData(null);
-      return;
-    }
-    
-    const { latitude, longitude, accuracy } = locationData;
-    
-    // Validate coordinates again
-    if (isNaN(latitude) || isNaN(longitude)) {
-      toast({
-        title: "Invalid Coordinates",
-        description: "Invalid coordinates detected. Please try again.",
-        variant: "destructive",
-      });
-      setShowLocationDialog(false);
-      setLocationData(null);
-      return;
-    }
-    
-    // Open Google Maps with route from user location to property
-    const origin = `${latitude},${longitude}`;
-    const dest = `${post.latitude},${post.longitude}`;
-    const url = `https://www.google.com/maps/dir/${origin}/${dest}`;
-    
-    // Open in new tab
-    window.open(url, '_blank');
-    
-    // Show success message
-    toast({
-      title: "Directions Opened",
-      description: "Google Maps should open in a new tab with the route.",
-      variant: "success",
-    });
-    
-    setShowLocationDialog(false);
-    setLocationData(null);
-  };
-
-  const handleAccuracyConfirm = () => {
-    setShowAccuracyDialog(false);
-    setShowLocationDialog(true);
-  };
-
-  const handleAccuracyCancel = () => {
-    setShowAccuracyDialog(false);
-    setLocationData(null);
-  };
-
-  const handleLocationTryAgain = () => {
-    setShowLocationDialog(false);
-    setLocationData(null);
-    handleSmartDirections();
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -471,29 +397,6 @@ function SinglePage() {
         </div>
       </div>
 
-      {/* Modern Confirmation Dialogs */}
-      <ModernConfirmationDialog
-        isOpen={showLocationDialog}
-        onClose={() => setShowLocationDialog(false)}
-        onConfirm={handleLocationConfirm}
-        onCancel={handleLocationTryAgain}
-        title="📍 Location Detected!"
-        description={`Your coordinates: ${locationData?.latitude?.toFixed(6) || 'Unknown'}, ${locationData?.longitude?.toFixed(6) || 'Unknown'}\nAccuracy: ${Math.round(locationData?.accuracy || 0)} meters\n\nIs this your current location?`}
-        confirmText="Open Directions"
-        cancelText="Try Again"
-        variant="default"
-      />
-
-      <ModernConfirmationDialog
-        isOpen={showAccuracyDialog}
-        onClose={handleAccuracyCancel}
-        onConfirm={handleAccuracyConfirm}
-        title="⚠️ Location Accuracy Warning!"
-        description={`Your current location accuracy is: ${Math.round(locationData?.accuracy || 0)} meters\n\nThis might not be your exact location.\n\nPossible reasons:\n• GPS signal is weak\n• You're indoors\n• Browser location permission is limited\n\nDo you want to continue anyway?`}
-        confirmText="Continue Anyway"
-        cancelText="Cancel"
-        variant="warning"
-      />
     </div>
   );
 }
