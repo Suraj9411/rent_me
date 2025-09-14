@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiRequest = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "http://localhost:8800/api",
+  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "/api",
   withCredentials: true,
 });
 
@@ -18,18 +18,12 @@ apiRequest.interceptors.request.use(
       // Try to get token from document.cookie as fallback
       const cookies = document.cookie.split(';');
       const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
-      const tokenBackupCookie = cookies.find(cookie => cookie.trim().startsWith('token_backup='));
-      
       if (tokenCookie) {
         const token = tokenCookie.split('=')[1];
         config.headers.Authorization = `Bearer ${token}`;
-        console.log("Added token to Authorization header from main cookie");
-      } else if (tokenBackupCookie) {
-        const token = tokenBackupCookie.split('=')[1];
-        config.headers.Authorization = `Bearer ${token}`;
-        console.log("Added token to Authorization header from backup cookie");
+        console.log("Added token to Authorization header as fallback");
       } else {
-        console.log("No token cookies found, relying on HTTP-only cookie");
+        console.log("No token cookie found, relying on HTTP-only cookie");
       }
     }
     

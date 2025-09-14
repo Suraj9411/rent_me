@@ -1,47 +1,15 @@
 services:
-  # Main API Service
   - type: web
-    name: rent-platform-api
+    name: renteasee-fullstack
     env: node
-    plan: free
-    buildCommand: cd api && npm install && npx prisma generate
-    startCommand: cd api && npm start
+    buildCommand: npm run install-all && cd api && npx prisma generate && cd ../client && npm run build
+    startCommand: npm start
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET_KEY
-        sync: false
-      - key: CLIENT_URL
-        value: https://rent-platform-client.onrender.com
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://renteasee-fullstack.onrender.com
       - key: PORT
-        value: 10000
-
-  # Socket Service
-  - type: web
-    name: rent-platform-socket
-    env: node
-    plan: free
-    buildCommand: cd socket && npm install
-    startCommand: cd socket && npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: CLIENT_URL
-        value: https://rent-platform-client.onrender.com
-      - key: SOCKET_PORT
-        value: 10001
-
-  # Frontend Client
-  - type: web
-    name: rent-platform-client
-    env: static
-    plan: free
-    buildCommand: cd client && npm install && npm run build
-    staticPublishPath: ./client/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://rent-platform-api.onrender.com
-      - key: VITE_SOCKET_URL
-        value: https://rent-platform-socket.onrender.com
+        value: 3000

@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { useNotificationStore } from "../../lib/notificationStore";
 import { SocketContext } from "../../context/SocketContext";
+import apiRequest from "../../lib/apiRequest";
 
 function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -72,34 +73,20 @@ function Navbar() {
         socket.emit('logout');
       }
 
-      // Make logout request to backend
-      const res = await fetch("http://localhost:8800/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Make logout request to backend using apiRequest
+      await apiRequest.post("/auth/logout");
       
-      if (res.ok) {
-        // Clear user from context
-        updateUser(null);
-        
-        // Close mobile menu if open
-        setMobileMenuOpen(false);
-        
-        // Clear any stored user data
-        localStorage.removeItem('user');
-        
-        // Redirect to home page
-        window.location.href = '/';
-      } else {
-        console.log("Logout failed:", res.status, res.statusText);
-        // Even if backend logout fails, clear local user data
-        updateUser(null);
-        localStorage.removeItem('user');
-        window.location.href = '/';
-      }
+      // Clear user from context
+      updateUser(null);
+      
+      // Close mobile menu if open
+      setMobileMenuOpen(false);
+      
+      // Clear any stored user data
+      localStorage.removeItem('user');
+      
+      // Redirect to home page
+      window.location.href = '/';
     } catch (err) {
       console.log("Logout error:", err);
       // Even if there's an error, clear local user data

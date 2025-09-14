@@ -114,31 +114,25 @@ export const login = async (req, res) => {
     const { password: userPassword, ...userInfo } = user;
 
     console.log("Setting cookie for user:", userInfo.username);
-    
-    // Use sameSite: 'lax' for better compatibility with blocked third-party cookies
-    const cookieOptions = {
+    console.log("Cookie settings:", {
       httpOnly: true,
       secure: true,
-      sameSite: 'lax', // More compatible with blocked third-party cookies
-      maxAge: age,
-      path: '/'
-    };
-    
-    console.log("Cookie settings:", cookieOptions);
-    
-    // Set the main cookie with lax settings
-    res.cookie("token", token, cookieOptions);
-    
-    // Also set a backup cookie that JS can access
-    res.cookie("token_backup", token, {
-      httpOnly: false, // Not httpOnly so JS can access it
-      secure: true,
-      sameSite: 'lax', // Same as main cookie
+      sameSite: 'none',
       maxAge: age,
       path: '/'
     });
     
-    res.status(200).json(userInfo);
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: true, // Always secure for HTTPS
+        sameSite: 'lax', // Same domain = first-party cookies
+        maxAge: age,
+        path: '/', // Ensure cookie is available for all paths
+        // Remove domain restriction - let browser handle it
+      })
+      .status(200)
+      .json(userInfo);
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Failed to login!" });
@@ -172,20 +166,11 @@ export const verifyToken = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  // Clear both cookies with lax settings
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
-    sameSite: 'lax',
-    path: '/',
-  });
-  
-  res.clearCookie("token_backup", {
-    httpOnly: false,
-    secure: true,
-    sameSite: 'lax',
-    path: '/',
-  });
-  
-  res.status(200).json({ message: "Logout Successful" });
+    sameSite: 'lax', // Same domain = first-party cookies
+    path: '/', // Ensure cookie is cleared from all paths
+    // Remove domain restriction - let browser handle it
+  }).status(200).json({ message: "Logout Successful" });
 };

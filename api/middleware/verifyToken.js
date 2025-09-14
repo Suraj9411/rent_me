@@ -1,10 +1,8 @@
 import jwt from "jsonwebtoken";
 
 export const verifyToken = (req, res, next) => {
-  // Try multiple sources for the token
-  const token = req.cookies.token || 
-                req.cookies.token_backup || 
-                req.headers.authorization?.replace('Bearer ', '');
+  // Try to get token from cookies first, then from Authorization header as fallback
+  const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
   
   // Debug logging
   console.log("=== AUTH DEBUG ===");
