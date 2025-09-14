@@ -65,12 +65,22 @@ export const addMessage = async (req, res) => {
     
     // Find the receiver (the other user in the chat)
     const receiverId = chat.userIDs.find(id => id !== tokenUserId);
+    console.log(`Message created by user ${tokenUserId} for chat ${chatId}, receiver: ${receiverId}`);
+    
     if (receiverId) {
       const io = getIO();
       if (io) {
-        console.log(`Emitting getMessage event to receiver: ${receiverId}`);
+        console.log(`Socket IO available, emitting getMessage event to all clients`);
+        console.log(`Message data:`, messageWithChatId);
+        // Emit getMessage directly to all connected clients
+        // The frontend will filter based on chatId
         io.emit("getMessage", messageWithChatId);
+        console.log(`getMessage event emitted successfully`);
+      } else {
+        console.log(`Socket IO not available!`);
       }
+    } else {
+      console.log(`No receiver found for chat ${chatId}`);
     }
 
     res.status(200).json(messageWithChatId);

@@ -34,9 +34,14 @@ function ChatPage() {
       });
 
       socket.on("getMessage", (data) => {
-        console.log("Received message:", data);
+        console.log("🔥 CHAT PAGE - Received getMessage event:", data);
+        console.log("Current chat ID:", id);
+        console.log("Message chatId:", data.chatId);
         if (data.chatId === id) {
+          console.log("✅ Message matches current chat, adding to messages");
           setMessages((prev) => [...prev, data]);
+        } else {
+          console.log("❌ Message doesn't match current chat, ignoring");
         }
       });
 

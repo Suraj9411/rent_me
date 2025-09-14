@@ -14,7 +14,7 @@ export const SocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:8800";
+      const socketUrl = import.meta.env.VITE_API_URL || "https://renteasee-ei1p.onrender.com";
       console.log("Initializing socket connection to:", socketUrl);
       
       const newSocket = io(socketUrl, {
@@ -92,7 +92,10 @@ export const SocketContextProvider = ({ children }) => {
 
       // Listen for new messages to refresh notifications
       const handleNewMessage = (data) => {
-        console.log("New message received, refreshing notifications", data);
+        console.log("🔥 NEW MESSAGE RECEIVED IN SOCKET CONTEXT:", data);
+        console.log("Message chatId:", data.chatId);
+        console.log("Current user ID:", currentUser?.id);
+        
         // Small delay to ensure message is saved to database first
         setTimeout(() => {
           if (currentUser) {
@@ -102,6 +105,7 @@ export const SocketContextProvider = ({ children }) => {
         
         // Also trigger a custom event for components that need to know about new messages
         if (typeof window !== 'undefined') {
+          console.log("Dispatching custom newMessageReceived event");
           window.dispatchEvent(new CustomEvent('newMessageReceived', { detail: data }));
         }
       };
