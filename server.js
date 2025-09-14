@@ -10,9 +10,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware for parsing JSON and URL-encoded data
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
 
@@ -33,9 +37,13 @@ app.use('/assets', express.static(path.join(__dirname, 'client/dist/assets'), {
   },
 }));
 
-// Debug middleware to log static file requests
+// Debug middleware to log API requests
 app.use((req, res, next) => {
-  if (req.url.includes('.css') || req.url.includes('.js') || req.url.includes('.html')) {
+  if (req.url.startsWith('/api')) {
+    console.log(`API Request: ${req.method} ${req.url}`);
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+  } else if (req.url.includes('.css') || req.url.includes('.js') || req.url.includes('.html')) {
     console.log(`Serving static file: ${req.url}`);
   }
   next();
@@ -50,5 +58,8 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📁 Serving static files from: ${path.join(__dirname, 'client/dist')}`);
+  console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

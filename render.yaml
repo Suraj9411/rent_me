@@ -10,6 +10,6 @@ services:
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: FRONTEND_URL
-        value: https://renteasee-fullstack.onrender.com
+        value: https://YOUR_ACTUAL_RENDER_URL.onrender.com
       - key: PORT
         value: 3000
