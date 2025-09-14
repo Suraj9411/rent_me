@@ -231,9 +231,12 @@ function SinglePage() {
                   </div>
                   <div className="flex flex-col items-center justify-center gap-4 px-6 py-4 rounded-lg bg-white/80 backdrop-blur-sm border border-gray-200 shadow-lg">
                     <img 
-                      src={post.user.avatar} 
+                      src={post.user?.avatar || "/noavatar.jpg"} 
                       alt="" 
                       className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
+                      onError={(e) => {
+                        e.target.src = "/noavatar.jpg";
+                      }}
                     />
                     <span className="font-semibold text-gray-900">{post.user.username}</span>
                   </div>

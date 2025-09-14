@@ -209,12 +209,15 @@ function Navbar() {
                 className="hidden md:flex items-center gap-3 text-gray-900 px-4 py-2 rounded-full bg-white/80 border border-gray-100 transition-all duration-300 hover:bg-white hover:border-blue-500 hover:-translate-y-0.5 hover:shadow-md backdrop-blur-sm"
               >
                 <img 
-                  src={currentUser.avatar || "/noavatar.jpg"} 
-                  alt={currentUser.username}
+                  src={currentUser?.avatar || "/noavatar.jpg"} 
+                  alt={currentUser?.username || "User"}
                   className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover border-2 border-blue-500 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30"
+                  onError={(e) => {
+                    e.target.src = "/noavatar.jpg";
+                  }}
                 />
                 <span className="font-semibold text-sm tracking-tight">
-                  {currentUser.username}
+                  {currentUser?.username || "User"}
                 </span>
               </Link>
 

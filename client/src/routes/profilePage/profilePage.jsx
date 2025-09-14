@@ -12,9 +12,35 @@ function ProfilePage() {
   const data = useLoaderData();
   const [userPosts, setUserPosts] = useState([]);
 
-  const { updateUser, currentUser } = useContext(AuthContext);
+  const { updateUser, currentUser, loading } = useContext(AuthContext);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Show loading state while authentication is being verified
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no user is authenticated
+  if (!currentUser) {
+    return (
+      <ErrorPage
+        title="Authentication Required"
+        message="Please log in to view your profile."
+        statusCode={401}
+        showRefresh={false}
+        showGoBack={true}
+        showGoHome={true}
+      />
+    );
+  }
 
   const handleLogout = async () => {
     try {
@@ -65,9 +91,12 @@ function ProfilePage() {
               <div className="text-center mb-8">
                 <div className="relative inline-block">
                   <img 
-                    src={currentUser.avatar || "/noavatar.jpg"} 
+                    src={currentUser?.avatar || "/noavatar.jpg"} 
                     alt="User Avatar" 
                     className="w-24 h-24 rounded-full object-cover border-4 border-blue-300 shadow-lg mx-auto"
+                    onError={(e) => {
+                      e.target.src = "/noavatar.jpg";
+                    }}
                   />
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-full border-4 border-white flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -75,8 +104,8 @@ function ProfilePage() {
                     </svg>
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{currentUser.username}</h2>
-                <p className="text-gray-600">{currentUser.email}</p>
+                <h2 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{currentUser?.username || 'User'}</h2>
+                <p className="text-gray-600">{currentUser?.email || 'No email'}</p>
               </div>
 
               {/* Profile Stats */}

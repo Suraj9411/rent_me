@@ -49,7 +49,7 @@ function Chat({ chats }) {
   const handleOpenChat = async (id, receiver) => {
     try {
       const res = await apiRequest("/chats/" + id);
-      if (!res.data.seenBy.includes(currentUser.id)) {
+      if (currentUser && !res.data.seenBy.includes(currentUser.id)) {
         decrease();
       }
       setChat({ ...res.data, receiver });
@@ -121,7 +121,7 @@ function Chat({ chats }) {
           {chats?.map((c) => (
             <div
               className={`p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
-                c.seenBy.includes(currentUser.id) || chat?.id === c.id
+                (currentUser && c.seenBy.includes(currentUser.id)) || chat?.id === c.id
                   ? "bg-white border border-gray-200"
                   : "bg-yellow-50 border border-yellow-200"
               }`}
@@ -130,9 +130,12 @@ function Chat({ chats }) {
             >
               <div className="flex items-center gap-3">
                 <img 
-                  src={c.receiver.avatar || "/noavatar.jpg"} 
+                  src={c.receiver?.avatar || "/noavatar.jpg"} 
                   alt="" 
                   className="w-12 h-12 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.src = "/noavatar.jpg";
+                  }}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -146,7 +149,7 @@ function Chat({ chats }) {
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-gray-600 truncate">
-                      {c.lastMessageSender === currentUser.id ? "You: " : ""}
+                      {currentUser && c.lastMessageSender === currentUser.id ? "You: " : ""}
                       {c.lastMessage}
                     </p>
                     {c.unreadCount > 0 && (
@@ -166,9 +169,12 @@ function Chat({ chats }) {
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img 
-                src={chat.receiver.avatar || "noavatar.jpg"} 
+                src={chat.receiver?.avatar || "/noavatar.jpg"} 
                 alt="" 
                 className="w-10 h-10 rounded-full object-cover"
+                onError={(e) => {
+                  e.target.src = "/noavatar.jpg";
+                }}
               />
               <span className="font-semibold text-gray-800">{chat.receiver.username}</span>
             </div>
@@ -182,17 +188,17 @@ function Chat({ chats }) {
           <div className="flex-1 p-4 overflow-y-auto space-y-4">
             {chat.messages.map((message) => (
               <div
-                className={`flex ${message.userId === currentUser.id ? "justify-end" : "justify-start"}`}
+                className={`flex ${currentUser && message.userId === currentUser.id ? "justify-end" : "justify-start"}`}
                 key={message.id}
               >
                 <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  message.userId === currentUser.id
+                  currentUser && message.userId === currentUser.id
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 text-gray-800"
                 }`}>
                   <p className="text-sm">{message.desc}</p>
                   <span className={`text-xs ${
-                    message.userId === currentUser.id ? "text-indigo-200" : "text-gray-500"
+                    currentUser && message.userId === currentUser.id ? "text-indigo-200" : "text-gray-500"
                   }`}>
                     {format(message.createdAt)}
                   </span>
