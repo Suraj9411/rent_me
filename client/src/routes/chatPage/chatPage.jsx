@@ -40,12 +40,24 @@ function ChatPage() {
         }
       });
 
+      // Listen for custom new message event
+      const handleNewMessageEvent = (event) => {
+        console.log("Custom new message event received:", event.detail);
+        const messageData = event.detail;
+        if (messageData.chatId === id) {
+          setMessages((prev) => [...prev, messageData]);
+        }
+      };
+
+      window.addEventListener('newMessageReceived', handleNewMessageEvent);
+
       // Cleanup function
       return () => {
         if (socket && typeof socket.off === 'function') {
           socket.off("getOnlineUsers");
           socket.off("getMessage");
         }
+        window.removeEventListener('newMessageReceived', handleNewMessageEvent);
       };
     } else {
       console.log("Socket not available or not properly initialized");
@@ -65,6 +77,19 @@ function ChatPage() {
       window.removeEventListener('onlineUsersUpdate', handleOnlineUsersUpdate);
     };
   }, []);
+
+  // Fallback: Periodic refresh of messages every 5 seconds if socket is not connected
+  useEffect(() => {
+    if (!isConnected && id) {
+      console.log("Socket not connected, setting up periodic message refresh");
+      const interval = setInterval(() => {
+        console.log("Periodic refresh: fetching messages");
+        fetchMessages();
+      }, 5000); // Refresh every 5 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isConnected, id]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

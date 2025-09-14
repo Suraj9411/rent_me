@@ -96,6 +96,11 @@ export const SocketContextProvider = ({ children }) => {
         setTimeout(() => {
           fetch().catch(err => console.log("Failed to refresh notifications:", err));
         }, 500);
+        
+        // Also trigger a custom event for components that need to know about new messages
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('newMessageReceived', { detail: data }));
+        }
       };
 
       // Listen for online users updates

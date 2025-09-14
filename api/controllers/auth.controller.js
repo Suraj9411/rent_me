@@ -116,9 +116,10 @@ export const login = async (req, res) => {
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: true, // Always secure for HTTPS
+        sameSite: 'none', // Allow cross-origin cookies
         maxAge: age,
+        domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined,
       })
       .status(200)
       .json(userInfo);
@@ -157,7 +158,8 @@ export const verifyToken = async (req, res) => {
 export const logout = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: true,
+    sameSite: 'none',
+    domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined,
   }).status(200).json({ message: "Logout Successful" });
 };

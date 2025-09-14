@@ -22,17 +22,19 @@ const CLIENT_URL = process.env.FRONTEND_URL || process.env.CLIENT_URL || "http:/
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: CLIENT_URL,
-    credentials: true
+    origin: [CLIENT_URL, "https://renteasee.vercel.app", "http://localhost:5173"],
+    credentials: true,
+    methods: ["GET", "POST"]
   }
 });
 
 app.use(cors({ 
-  origin: CLIENT_URL, 
+  origin: [CLIENT_URL, "https://renteasee.vercel.app", "http://localhost:5173"],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 200
 }));
 app.use(express.json());
 app.use(cookieParser());
