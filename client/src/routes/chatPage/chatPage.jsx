@@ -34,8 +34,22 @@ function ChatPage() {
       });
 
       socket.on("getMessage", (data) => {
-        if (data.chatId === id) {
-          setMessages((prev) => [...prev, data]);
+        console.log("Socket received message:", data);
+        console.log("Current user ID:", currentUser?.id);
+        console.log("Message user ID:", data.userId);
+        console.log("Is from different user:", data.userId !== currentUser?.id);
+        
+        if (data.chatId === id && data.userId !== currentUser?.id) {
+          setMessages((prev) => {
+            // Check if message already exists to prevent duplicates
+            const exists = prev.some(msg => msg.id === data.id);
+            if (exists) {
+              console.log("Socket message already exists, not adding duplicate");
+              return prev;
+            }
+            console.log("Adding socket message to state");
+            return [...prev, data];
+          });
         }
       });
 
@@ -165,7 +179,16 @@ function ChatPage() {
       setLoading(true);
       const res = await apiRequest.post(`/messages/${id}`, { desc: newMessage.trim() });
       console.log("Message sent:", res.data);
-      setMessages((prev) => [...prev, res.data]);
+      setMessages((prev) => {
+        // Check if message already exists to prevent duplicates
+        const exists = prev.some(msg => msg.id === res.data.id);
+        if (exists) {
+          console.log("Message already exists, not adding duplicate");
+          return prev;
+        }
+        console.log("Adding new message to state");
+        return [...prev, res.data];
+      });
       setNewMessage("");
       
       // Backend will handle socket emission
