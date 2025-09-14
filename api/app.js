@@ -71,13 +71,18 @@ io.on("connection", (socket) => {
   socket.on("newUser", (userId) => {
     console.log(`New user joining: ${userId} with socket: ${socket.id}`);
     addUser(userId, socket.id);
-    socket.emit("getOnlineUsers", onlineUsers.map(user => user.userId));
-    io.emit("getOnlineUsers", onlineUsers.map(user => user.userId));
+    const onlineUserIds = onlineUsers.map(user => user.userId);
+    console.log("Broadcasting online users:", onlineUserIds);
+    socket.emit("getOnlineUsers", onlineUserIds);
+    io.emit("getOnlineUsers", onlineUserIds);
   });
 
   socket.on("reconnectUser", (userId) => {
     console.log(`User reconnecting: ${userId} with new socket: ${socket.id}`);
     addUser(userId, socket.id);
+    const onlineUserIds = onlineUsers.map(user => user.userId);
+    console.log("Broadcasting online users after reconnect:", onlineUserIds);
+    io.emit("getOnlineUsers", onlineUserIds);
   });
 
   socket.on("heartbeat", (userId) => {
@@ -92,19 +97,23 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", ({ receiverId, data }) => {
     console.log(`Sending message from socket ${socket.id} to user ${receiverId}`);
+    console.log(`Message data:`, data);
     const receiver = getUser(receiverId);
     if (receiver) {
-      console.log(`Receiver found with socket ${receiver.socketId}`);
+      console.log(`Receiver found with socket ${receiver.socketId}, sending message`);
       io.to(receiver.socketId).emit("getMessage", data);
+      console.log(`Message sent successfully to ${receiverId}`);
     } else {
-      console.log(`Receiver ${receiverId} not found online`);
+      console.log(`Receiver ${receiverId} not found online. Current online users:`, onlineUsers.map(u => u.userId));
     }
   });
 
   socket.on("logout", () => {
     console.log(`User logout event received from socket ${socket.id}`);
     removeUser(socket.id);
+    const onlineUserIds = onlineUsers.map(user => user.userId);
     console.log("User removed from online list. Remaining online users:", onlineUsers.length);
+    io.emit("getOnlineUsers", onlineUserIds);
   });
 
   socket.on("disconnect", () => {
@@ -113,6 +122,8 @@ io.on("connection", (socket) => {
       if (user) {
         console.log(`User ${user.userId} disconnected after timeout, removing from online list`);
         removeUser(socket.id);
+        const onlineUserIds = onlineUsers.map(user => user.userId);
+        io.emit("getOnlineUsers", onlineUserIds);
       }
     }, 30000);
     

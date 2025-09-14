@@ -5,6 +5,7 @@ import { format } from "timeago.js";
 import { SocketContext } from "../../context/SocketContext";
 import { useNotificationStore } from "../../lib/notificationStore";
 import { useNavigate } from "react-router-dom";
+import OnlineStatus from "../ui/OnlineStatus";
 
 function Chat({ chats }) {
   const [chat, setChat] = useState(null);
@@ -84,7 +85,7 @@ function Chat({ chats }) {
       e.target.reset();
       socket.emit("sendMessage", {
         receiverId: chat.receiver.id,
-        data: res.data,
+        data: { ...res.data, chatId: chat.id },
       });
     } catch (err) {
       console.log(err);
@@ -100,17 +101,23 @@ function Chat({ chats }) {
       }
     };
 
-    if (chat && socket) {
-      socket.on("getMessage", (data) => {
+    if (chat && socket && typeof socket.on === 'function') {
+      const handleNewMessage = (data) => {
+        console.log("Chat component received message:", data);
         if (chat.id === data.chatId) {
           setChat((prev) => ({ ...prev, messages: [...prev.messages, data] }));
           read();
         }
-      });
+      };
+
+      socket.on("getMessage", handleNewMessage);
+
+      return () => {
+        if (socket && typeof socket.off === 'function') {
+          socket.off("getMessage", handleNewMessage);
+        }
+      };
     }
-    return () => {
-      socket.off("getMessage");
-    };
   }, [socket, chat]);
 
   return (
@@ -140,12 +147,7 @@ function Chat({ chats }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-semibold text-gray-800 truncate">{c.receiver.username}</span>
-                    <div 
-                      className={`w-3 h-3 rounded-full ${
-                        onlineUsers.includes(c.receiver?.id) ? "bg-green-500" : "bg-gray-400"
-                      }`} 
-                      title={`${c.receiver?.username} is ${onlineUsers.includes(c.receiver?.id) ? "online" : "offline"}`}
-                    ></div>
+                    <OnlineStatus userId={c.receiver?.id} />
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-gray-600 truncate">

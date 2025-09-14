@@ -9,6 +9,7 @@ export const SocketContextProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext);
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const fetch = useNotificationStore((state) => state.fetch);
 
   useEffect(() => {
@@ -108,6 +109,7 @@ export const SocketContextProvider = ({ children }) => {
       // Listen for online users updates
       const handleOnlineUsers = (users) => {
         console.log("Received online users update:", users);
+        setOnlineUsers(users || []);
         // Broadcast to all components that need online status
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('onlineUsersUpdate', { detail: users }));
@@ -218,7 +220,7 @@ export const SocketContextProvider = ({ children }) => {
   }, [fetch, currentUser]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
+    <SocketContext.Provider value={{ socket, isConnected, onlineUsers }}>
       {children}
     </SocketContext.Provider>
   );
