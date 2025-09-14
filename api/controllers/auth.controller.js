@@ -113,13 +113,23 @@ export const login = async (req, res) => {
 
     const { password: userPassword, ...userInfo } = user;
 
+    console.log("Setting cookie for user:", userInfo.username);
+    console.log("Cookie settings:", {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: age,
+      path: '/'
+    });
+    
     res
       .cookie("token", token, {
         httpOnly: true,
         secure: true, // Always secure for HTTPS
         sameSite: 'none', // Allow cross-origin cookies
         maxAge: age,
-        domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined,
+        path: '/', // Ensure cookie is available for all paths
+        // Remove domain restriction - let browser handle it
       })
       .status(200)
       .json(userInfo);
@@ -160,6 +170,7 @@ export const logout = (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: 'none',
-    domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined,
+    path: '/', // Ensure cookie is cleared from all paths
+    // Remove domain restriction - let browser handle it
   }).status(200).json({ message: "Logout Successful" });
 };

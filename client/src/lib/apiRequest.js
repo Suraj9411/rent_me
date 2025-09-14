@@ -5,10 +5,28 @@ const apiRequest = axios.create({
   withCredentials: true,
 });
 
-// Add request interceptor for debugging
+// Add request interceptor for debugging and token fallback
 apiRequest.interceptors.request.use(
   (config) => {
     console.log(`Making ${config.method?.toUpperCase()} request to:`, config.url);
+    console.log("Current cookies:", document.cookie);
+    console.log("withCredentials:", config.withCredentials);
+    
+    // Add token to Authorization header as fallback if cookies fail
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (user && user.id) {
+      // Try to get token from document.cookie as fallback
+      const cookies = document.cookie.split(';');
+      const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+      if (tokenCookie) {
+        const token = tokenCookie.split('=')[1];
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log("Added token to Authorization header as fallback");
+      } else {
+        console.log("No token cookie found, relying on HTTP-only cookie");
+      }
+    }
+    
     return config;
   },
   (error) => {

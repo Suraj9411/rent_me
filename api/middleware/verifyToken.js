@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 
 export const verifyToken = (req, res, next) => {
-  const token = req.cookies.token;
+  // Try to get token from cookies first, then from Authorization header as fallback
+  const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
   
   // Debug logging
   console.log("=== AUTH DEBUG ===");
@@ -13,8 +14,10 @@ export const verifyToken = (req, res, next) => {
   console.log("Request headers:", {
     'cookie': req.headers.cookie,
     'origin': req.headers.origin,
-    'referer': req.headers.referer
+    'referer': req.headers.referer,
+    'user-agent': req.headers['user-agent']?.substring(0, 50) + "..."
   });
+  console.log("JWT Secret exists:", !!process.env.JWT_SECRET_KEY);
   console.log("==================");
 
   if (!token) {
