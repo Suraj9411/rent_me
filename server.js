@@ -17,7 +17,29 @@ app.use(cors({
 }));
 
 // Serve static files from the React app build directory
-app.use(express.static(path.join(__dirname, 'client/dist')));
+app.use(express.static(path.join(__dirname, 'client/dist'), {
+  maxAge: '1y', // Cache static assets for 1 year
+  etag: true,
+  lastModified: true,
+}));
+
+// Serve CSS files with proper MIME type
+app.use('/assets', express.static(path.join(__dirname, 'client/dist/assets'), {
+  maxAge: '1y',
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  },
+}));
+
+// Debug middleware to log static file requests
+app.use((req, res, next) => {
+  if (req.url.includes('.css') || req.url.includes('.js') || req.url.includes('.html')) {
+    console.log(`Serving static file: ${req.url}`);
+  }
+  next();
+});
 
 // API routes (your existing backend)
 app.use('/api', apiRoutes);
