@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'url';
 import apiRoutes from './api/routes/index.js';
 
@@ -13,6 +14,9 @@ const PORT = process.env.PORT || 3000;
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Cookie parsing middleware
+app.use(cookieParser());
 
 // CORS configuration
 app.use(cors({
@@ -42,6 +46,7 @@ app.use((req, res, next) => {
   if (req.url.startsWith('/api')) {
     console.log(`API Request: ${req.method} ${req.url}`);
     console.log('Request body:', req.body);
+    console.log('Request cookies:', req.cookies);
     console.log('Request headers:', req.headers);
   } else if (req.url.includes('.css') || req.url.includes('.js') || req.url.includes('.html')) {
     console.log(`Serving static file: ${req.url}`);
