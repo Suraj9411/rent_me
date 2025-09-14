@@ -123,6 +123,11 @@ function SinglePage() {
 
       const { latitude, longitude, accuracy } = position.coords;
       
+      // Validate coordinates
+      if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+        throw new Error("Invalid coordinates received");
+      }
+      
       // Store location data for dialogs
       setLocationData({ latitude, longitude, accuracy });
       
@@ -164,6 +169,11 @@ function SinglePage() {
           "2. You're in an area with poor signal\n" +
           "3. Device is taking too long to get location\n\n" +
           "Try moving to a different location or try again.";
+      } else if (error.message === "Invalid coordinates received") {
+        errorMessage = 
+          "📍 Invalid location data received!\n\n" +
+          "The location service returned invalid coordinates.\n" +
+          "Please try again or use the map to select a location manually.";
       }
       
       toast({
@@ -176,9 +186,30 @@ function SinglePage() {
   };
 
   const handleLocationConfirm = () => {
-    if (!locationData) return;
+    if (!locationData || !locationData.latitude || !locationData.longitude) {
+      toast({
+        title: "Invalid Location",
+        description: "Location data is invalid. Please try again.",
+        variant: "destructive",
+      });
+      setShowLocationDialog(false);
+      setLocationData(null);
+      return;
+    }
     
     const { latitude, longitude, accuracy } = locationData;
+    
+    // Validate coordinates again
+    if (isNaN(latitude) || isNaN(longitude)) {
+      toast({
+        title: "Invalid Coordinates",
+        description: "Invalid coordinates detected. Please try again.",
+        variant: "destructive",
+      });
+      setShowLocationDialog(false);
+      setLocationData(null);
+      return;
+    }
     
     // Open Google Maps with route from user location to property
     const origin = `${latitude},${longitude}`;
@@ -207,6 +238,12 @@ function SinglePage() {
   const handleAccuracyCancel = () => {
     setShowAccuracyDialog(false);
     setLocationData(null);
+  };
+
+  const handleLocationTryAgain = () => {
+    setShowLocationDialog(false);
+    setLocationData(null);
+    handleSmartDirections();
   };
 
   return (
@@ -415,8 +452,9 @@ function SinglePage() {
         isOpen={showLocationDialog}
         onClose={() => setShowLocationDialog(false)}
         onConfirm={handleLocationConfirm}
+        onCancel={handleLocationTryAgain}
         title="📍 Location Detected!"
-        description={`Your coordinates: ${locationData?.latitude?.toFixed(6)}, ${locationData?.longitude?.toFixed(6)}\nAccuracy: ${Math.round(locationData?.accuracy || 0)} meters\n\nIs this your current location?`}
+        description={`Your coordinates: ${locationData?.latitude?.toFixed(6) || 'Unknown'}, ${locationData?.longitude?.toFixed(6) || 'Unknown'}\nAccuracy: ${Math.round(locationData?.accuracy || 0)} meters\n\nIs this your current location?`}
         confirmText="Open Directions"
         cancelText="Try Again"
         variant="default"
