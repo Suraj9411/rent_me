@@ -1,10 +1,10 @@
-const express = require('express');
-const authRoutes = require('./auth.route');
-const userRoutes = require('./user.route');
-const postRoutes = require('./post.route');
-const chatRoutes = require('./chat.route');
-const messageRoutes = require('./message.route');
-const testRoutes = require('./test.route');
+import express from 'express';
+import authRoutes from './auth.route.js';
+import userRoutes from './user.route.js';
+import postRoutes from './post.route.js';
+import chatRoutes from './chat.route.js';
+import messageRoutes from './message.route.js';
+import testRoutes from './test.route.js';
 
 const router = express.Router();
 
@@ -16,4 +16,4 @@ router.use('/chats', chatRoutes);
 router.use('/messages', messageRoutes);
 router.use('/test', testRoutes);
 
-module.exports = router;
+export default router;

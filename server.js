@@ -1,6 +1,11 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import apiRoutes from './api/routes/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,7 +20,7 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, 'client/dist')));
 
 // API routes (your existing backend)
-app.use('/api', require('./api/routes/index.js'));
+app.use('/api', apiRoutes);
 
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
