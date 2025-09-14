@@ -85,7 +85,7 @@ function Chat({ chats }) {
       e.target.reset();
       socket.emit("sendMessage", {
         receiverId: chat.receiver.id,
-        data: { ...res.data, chatId: chat.id },
+        data: res.data,
       });
     } catch (err) {
       console.log(err);
@@ -101,23 +101,17 @@ function Chat({ chats }) {
       }
     };
 
-    if (chat && socket && typeof socket.on === 'function') {
-      const handleNewMessage = (data) => {
-        console.log("Chat component received message:", data);
+    if (chat && socket) {
+      socket.on("getMessage", (data) => {
         if (chat.id === data.chatId) {
           setChat((prev) => ({ ...prev, messages: [...prev.messages, data] }));
           read();
         }
-      };
-
-      socket.on("getMessage", handleNewMessage);
-
-      return () => {
-        if (socket && typeof socket.off === 'function') {
-          socket.off("getMessage", handleNewMessage);
-        }
-      };
+      });
     }
+    return () => {
+      socket.off("getMessage");
+    };
   }, [socket, chat]);
 
   return (

@@ -185,7 +185,7 @@ function ChatPage() {
       if (socket && typeof socket.emit === 'function' && isConnected) {
         socket.emit("sendMessage", {
           receiverId: currentChat?.userIDs.find((uid) => uid !== currentUser.id),
-          data: { ...res.data, chatId: id },
+          data: res.data,
         });
       } else {
         console.log("Socket not available for real-time messaging");

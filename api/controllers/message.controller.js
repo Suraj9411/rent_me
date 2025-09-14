@@ -59,7 +59,7 @@ export const addMessage = async (req, res) => {
       // Continue even if chat update fails
     }
 
-    res.status(200).json(message);
+    res.status(200).json({ ...message, chatId });
   } catch (err) {
     console.error("Error in addMessage:", err);
     res.status(500).json({ message: "Failed to add message!" });
