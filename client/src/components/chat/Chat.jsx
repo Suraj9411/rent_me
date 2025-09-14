@@ -83,10 +83,7 @@ function Chat({ chats }) {
       const res = await apiRequest.post("/messages/" + chat.id, { desc });
       setChat((prev) => ({ ...prev, messages: [...prev.messages, res.data] }));
       e.target.reset();
-      socket.emit("sendMessage", {
-        receiverId: chat.receiver.id,
-        data: res.data,
-      });
+      // Backend will handle socket emission
     } catch (err) {
       console.log(err);
     }

@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import { io } from "../app.js";
 
 export const addMessage = async (req, res) => {
   const tokenUserId = req.userId;
@@ -59,7 +60,17 @@ export const addMessage = async (req, res) => {
       // Continue even if chat update fails
     }
 
-    res.status(200).json({ ...message, chatId });
+    // Emit socket event to notify receiver
+    const messageWithChatId = { ...message, chatId };
+    
+    // Find the receiver (the other user in the chat)
+    const receiverId = chat.userIDs.find(id => id !== tokenUserId);
+    if (receiverId) {
+      console.log(`Emitting getMessage event to receiver: ${receiverId}`);
+      io.emit("getMessage", messageWithChatId);
+    }
+
+    res.status(200).json(messageWithChatId);
   } catch (err) {
     console.error("Error in addMessage:", err);
     res.status(500).json({ message: "Failed to add message!" });

@@ -181,15 +181,7 @@ function ChatPage() {
       setMessages((prev) => [...prev, res.data]);
       setNewMessage("");
       
-      // Only emit socket event if socket is connected
-      if (socket && typeof socket.emit === 'function' && isConnected) {
-        socket.emit("sendMessage", {
-          receiverId: currentChat?.userIDs.find((uid) => uid !== currentUser.id),
-          data: res.data,
-        });
-      } else {
-        console.log("Socket not available for real-time messaging");
-      }
+      // Backend will handle socket emission
     } catch (err) {
       console.error("Error sending message:", err);
       if (err.response?.status === 404) {

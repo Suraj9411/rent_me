@@ -28,6 +28,9 @@ const io = new Server(server, {
   }
 });
 
+// Export io for use in other modules
+export { io };
+
 app.use(cors({ 
   origin: [CLIENT_URL, "https://renteasee.vercel.app", "http://localhost:5173"],
   credentials: true,
