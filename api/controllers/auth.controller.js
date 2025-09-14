@@ -114,25 +114,31 @@ export const login = async (req, res) => {
     const { password: userPassword, ...userInfo } = user;
 
     console.log("Setting cookie for user:", userInfo.username);
-    console.log("Cookie settings:", {
+    
+    // Try multiple cookie configurations for better compatibility
+    const cookieOptions = {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
       maxAge: age,
       path: '/'
+    };
+    
+    console.log("Cookie settings:", cookieOptions);
+    
+    // Set the cookie
+    res.cookie("token", token, cookieOptions);
+    
+    // Also set a backup cookie with different settings
+    res.cookie("token_backup", token, {
+      httpOnly: false, // Not httpOnly so JS can access it
+      secure: true,
+      sameSite: 'lax', // More permissive
+      maxAge: age,
+      path: '/'
     });
     
-    res
-      .cookie("token", token, {
-        httpOnly: true,
-        secure: true, // Always secure for HTTPS
-        sameSite: 'none', // Allow cross-origin cookies
-        maxAge: age,
-        path: '/', // Ensure cookie is available for all paths
-        // Remove domain restriction - let browser handle it
-      })
-      .status(200)
-      .json(userInfo);
+    res.status(200).json(userInfo);
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Failed to login!" });
@@ -166,11 +172,20 @@ export const verifyToken = async (req, res) => {
 };
 
 export const logout = (req, res) => {
+  // Clear both cookies
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
     sameSite: 'none',
-    path: '/', // Ensure cookie is cleared from all paths
-    // Remove domain restriction - let browser handle it
-  }).status(200).json({ message: "Logout Successful" });
+    path: '/',
+  });
+  
+  res.clearCookie("token_backup", {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+  });
+  
+  res.status(200).json({ message: "Logout Successful" });
 };
