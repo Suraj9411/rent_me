@@ -32,8 +32,27 @@ export const listPageLoader = async ({ request, params }) => {
 
 export const profilePageLoader = async () => {
   try {
-    const postPromise = apiRequest("/users/profilePosts");
-    const chatPromise = apiRequest("/chats");
+    console.log("Profile loader: Starting to fetch data");
+    
+    // Add a small delay to ensure authentication is ready
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const postPromise = apiRequest("/users/profilePosts").catch(err => {
+      console.error("Profile posts request failed:", err);
+      if (err.response?.status === 401) {
+        throw new Error("Authentication required. Please log in.");
+      }
+      throw err;
+    });
+    
+    const chatPromise = apiRequest("/chats").catch(err => {
+      console.error("Chats request failed:", err);
+      if (err.response?.status === 401) {
+        throw new Error("Authentication required. Please log in.");
+      }
+      throw err;
+    });
+    
     return defer({
       postResponse: postPromise,
       chatResponse: chatPromise,
