@@ -28,9 +28,15 @@ function Navbar() {
   // Fetch notifications
   useEffect(() => {
     if (currentUser) {
-      fetch().catch(err => {
-        console.log("Failed to fetch notifications:", err);
-      });
+      // Add a small delay to ensure authentication is fully established
+      const timer = setTimeout(() => {
+        console.log("Navbar: Fetching notifications for user:", currentUser.id);
+        fetch().catch(err => {
+          console.log("Failed to fetch notifications:", err);
+        });
+      }, 200);
+      
+      return () => clearTimeout(timer);
     }
   }, [currentUser, fetch]);
 

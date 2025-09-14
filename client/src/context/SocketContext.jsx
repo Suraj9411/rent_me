@@ -94,7 +94,9 @@ export const SocketContextProvider = ({ children }) => {
         console.log("New message received, refreshing notifications", data);
         // Small delay to ensure message is saved to database first
         setTimeout(() => {
-          fetch().catch(err => console.log("Failed to refresh notifications:", err));
+          if (currentUser) {
+            fetch().catch(err => console.log("Failed to refresh notifications:", err));
+          }
         }, 500);
         
         // Also trigger a custom event for components that need to know about new messages
@@ -201,7 +203,11 @@ export const SocketContextProvider = ({ children }) => {
     if (typeof window !== 'undefined') {
       window.refreshNotifications = () => {
         console.log("Global notification refresh triggered");
-        fetch().catch(err => console.log("Global notification refresh failed:", err));
+        if (currentUser) {
+          fetch().catch(err => console.log("Global notification refresh failed:", err));
+        } else {
+          console.log("No current user, skipping notification refresh");
+        }
       };
     }
     return () => {
@@ -209,7 +215,7 @@ export const SocketContextProvider = ({ children }) => {
         delete window.refreshNotifications;
       }
     };
-  }, [fetch]);
+  }, [fetch, currentUser]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

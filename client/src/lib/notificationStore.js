@@ -12,7 +12,13 @@ export const useNotificationStore = create((set, get) => ({
       console.log("Notification store updated to:", get().number);
     } catch (error) {
       console.log("Failed to fetch notifications:", error);
-      set({ number: 0 });
+      // Only set to 0 if it's an authentication error, otherwise keep current value
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        console.log("Authentication error, resetting notifications to 0");
+        set({ number: 0 });
+      } else {
+        console.log("Network error, keeping current notification count");
+      }
     }
   },
   decrease: () => {
