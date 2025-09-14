@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma.js";
-import { io } from "../app.js";
+import { getIO } from "../socket.js";
 
 export const addMessage = async (req, res) => {
   const tokenUserId = req.userId;
@@ -66,8 +66,11 @@ export const addMessage = async (req, res) => {
     // Find the receiver (the other user in the chat)
     const receiverId = chat.userIDs.find(id => id !== tokenUserId);
     if (receiverId) {
-      console.log(`Emitting getMessage event to receiver: ${receiverId}`);
-      io.emit("getMessage", messageWithChatId);
+      const io = getIO();
+      if (io) {
+        console.log(`Emitting getMessage event to receiver: ${receiverId}`);
+        io.emit("getMessage", messageWithChatId);
+      }
     }
 
     res.status(200).json(messageWithChatId);
