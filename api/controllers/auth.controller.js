@@ -5,12 +5,49 @@ import prisma from "../lib/prisma.js";
 export const register = async (req, res) => {
   const { username, email, password } = req.body;
 
-  try {
-    // HASH THE PASSWORD
+  // Validate input
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: "All fields are required!" });
+  }
 
+  if (username.length < 3) {
+    return res.status(400).json({ message: "Username must be at least 3 characters long!" });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters long!" });
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Please enter a valid email address!" });
+  }
+
+  try {
+    // Check if user already exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: email },
+          { username: username }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      if (existingUser.email === email) {
+        return res.status(400).json({ message: "Email already exists!" });
+      }
+      if (existingUser.username === username) {
+        return res.status(400).json({ message: "Username already exists!" });
+      }
+    }
+
+    // HASH THE PASSWORD
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log(hashedPassword);
+    console.log("Creating user with:", { username, email });
 
     // CREATE A NEW USER AND SAVE TO DB
     const newUser = await prisma.user.create({
@@ -21,11 +58,22 @@ export const register = async (req, res) => {
       },
     });
 
-    console.log(newUser);
+    console.log("User created successfully:", newUser.id);
 
     res.status(201).json({ message: "User created successfully" });
   } catch (err) {
-    console.log(err);
+    console.log("Registration error:", err);
+    
+    // Handle specific Prisma errors
+    if (err.code === 'P2002') {
+      if (err.meta?.target?.includes('email')) {
+        return res.status(400).json({ message: "Email already exists!" });
+      }
+      if (err.meta?.target?.includes('username')) {
+        return res.status(400).json({ message: "Username already exists!" });
+      }
+    }
+    
     res.status(500).json({ message: "Failed to create user!" });
   }
 };
@@ -77,6 +125,32 @@ export const login = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Failed to login!" });
+  }
+};
+
+export const verifyToken = async (req, res) => {
+  try {
+    // The verifyToken middleware already verified the token and set req.userId
+    // Now we need to get the user data
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        createdAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    res.status(200).json(user);
+  } catch (err) {
+    console.log("Token verification error:", err);
+    res.status(500).json({ message: "Token verification failed!" });
   }
 };
 
