@@ -86,6 +86,15 @@ function CompactCard({ item, showActions = false, onEdit, onDelete, showMessage 
   };
 
   const handleCardClick = () => {
+    if (!currentUser) {
+      toast({
+        title: "Login Required",
+        description: "Please login to view property details.",
+        variant: "warning",
+      });
+      navigate('/login');
+      return;
+    }
     navigate(`/${item.id}`);
   };
 

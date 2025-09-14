@@ -42,6 +42,21 @@ function ListPage() {
     }
   }, [data.postResponse, currentPage]);
 
+  const handleViewDetails = (propertyId) => {
+    if (!currentUser) {
+      toast({
+        title: "Login Required",
+        description: "Please login to view property details.",
+        variant: "warning",
+      });
+      navigate('/login');
+      return;
+    }
+    
+    // Navigate to property details page
+    navigate(`/${propertyId}`);
+  };
+
   const handleSaveProperty = async (propertyId) => {
     if (!currentUser) {
       // User not logged in, redirect to login page
@@ -178,12 +193,12 @@ function ListPage() {
                                 </div>
                               </div>
                               <div className="flex gap-1.5 sm:gap-2.5">
-                                <Link 
-                                  to={`/${post.id}`} 
+                                <button 
+                                  onClick={() => handleViewDetails(post.id)}
                                   className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-semibold text-xs sm:text-sm cursor-pointer transition-all duration-300 text-center shadow-lg hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/35"
                                 >
                                   Details
-                                </Link>
+                                </button>
                                 <button 
                                   className={`flex-1 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-semibold text-xs sm:text-sm cursor-pointer transition-all duration-300 text-center ${
                                     !currentUser 

@@ -2,7 +2,7 @@ import Slider from "../../components/slider/Slider";
 import Map from "../../components/map/Map";
 import { useNavigate, useLoaderData } from "react-router-dom";
 import DOMPurify from "dompurify";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import apiRequest from "../../lib/apiRequest";
 import { useToast } from "../../hooks/use-toast";
@@ -18,6 +18,30 @@ function SinglePage() {
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Authentication check - redirect to login if not authenticated
+  useEffect(() => {
+    if (!currentUser) {
+      toast({
+        title: "Login Required",
+        description: "Please login to view property details.",
+        variant: "warning",
+      });
+      navigate("/login");
+    }
+  }, [currentUser, navigate, toast]);
+
+  // Don't render the component if user is not authenticated
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSave = async () => {
     if (!currentUser) {
