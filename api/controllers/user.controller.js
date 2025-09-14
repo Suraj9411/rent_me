@@ -137,6 +137,7 @@ export const profilePosts = async (req, res) => {
         postDetail: true,
         user: {
           select: {
+            id: true,
             username: true,
             avatar: true,
           },
@@ -155,6 +156,7 @@ export const profilePosts = async (req, res) => {
             postDetail: true,
             user: {
               select: {
+                id: true,
                 username: true,
                 avatar: true,
               },

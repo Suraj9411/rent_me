@@ -40,25 +40,57 @@ function NewPostPage() {
     }
   }, [searchParams, location.state]);
 
-  // Detect user's current location
+  // Detect user's current location with improved accuracy
   const detectLocation = () => {
     setIsDetectingLocation(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
+          const { latitude, longitude, accuracy } = position.coords;
+          
+          // Check accuracy and warn user if poor
+          if (accuracy > 100) {
+            toast({
+              title: "Location Accuracy Warning",
+              description: `Location accuracy is ${Math.round(accuracy)} meters. This might not be your exact location.`,
+              variant: "warning",
+            });
+          }
+          
           setUserLocation({ latitude, longitude });
           setSelectedLocation({ latitude, longitude });
           setIsDetectingLocation(false);
+          
+          toast({
+            title: "Location Detected",
+            description: `Location found with ${Math.round(accuracy)} meter accuracy.`,
+            variant: "success",
+          });
         },
         (error) => {
           console.error("Error getting location:", error);
           setIsDetectingLocation(false);
+          
+          let errorMessage = "Could not detect your location. Please use the map to select a location.";
+          
+          if (error.code === error.PERMISSION_DENIED) {
+            errorMessage = "Location permission denied. Please enable location access and try again.";
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errorMessage = "Location unavailable. Please check your GPS/network connection and try again.";
+          } else if (error.code === error.TIMEOUT) {
+            errorMessage = "Location request timed out. Please try again or use the map to select a location.";
+          }
+          
           toast({
             title: "Location Detection Failed",
-            description: "Could not detect your location. Please use the map to select a location.",
+            description: errorMessage,
             variant: "warning",
           });
+        },
+        {
+          enableHighAccuracy: true,  // Use GPS if available
+          timeout: 30000,            // Wait up to 30 seconds
+          maximumAge: 0              // Force fresh location
         }
       );
     } else {

@@ -6,11 +6,15 @@ import { useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import apiRequest from "../../lib/apiRequest";
 import { useToast } from "../../hooks/use-toast";
+import ModernConfirmationDialog from "../../components/ui/modern-confirmation-dialog";
 
 function SinglePage() {
   const post = useLoaderData();
   const [saved, setSaved] = useState(post.isSaved);
   const [isLoading, setIsLoading] = useState(false);
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [showAccuracyDialog, setShowAccuracyDialog] = useState(false);
+  const [locationData, setLocationData] = useState(null);
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -119,55 +123,19 @@ function SinglePage() {
 
       const { latitude, longitude, accuracy } = position.coords;
       
+      // Store location data for dialogs
+      setLocationData({ latitude, longitude, accuracy });
+      
       // Check location accuracy
       if (accuracy > 100) { // If accuracy is worse than 100 meters
-        const continueAnyway = confirm(
-          `Location Accuracy Warning!\n\n` +
-          `Your current location accuracy is: ${Math.round(accuracy)} meters\n` +
-          `This might not be your exact location.\n\n` +
-          `Possible reasons:\n` +
-          `• GPS signal is weak\n` +
-          `• You're indoors\n` +
-          `• Browser location permission is limited\n\n` +
-          `Do you want to continue anyway?`
-        );
-        
-        if (!continueAnyway) {
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      // Show location confirmation
-      const locationConfirm = confirm(
-        `📍 Location Detected!\n\n` +
-        `Your coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n` +
-        `Accuracy: ${Math.round(accuracy)} meters\n\n` +
-        `Is this your current location?\n` +
-        `• Yes: Open directions\n` +
-        `• No: Try again or use manual input`
-      );
-
-      if (!locationConfirm) {
+        setShowAccuracyDialog(true);
         setIsLoading(false);
         return;
       }
-      
-      // Open Google Maps with route from user location to property
-      const origin = `${latitude},${longitude}`;
-      const dest = `${post.latitude},${post.longitude}`;
-      const url = `https://www.google.com/maps/dir/${origin}/${dest}`;
-      
-      // Open in new tab
-      window.open(url, '_blank');
-      
-      // Show success message
-      const successMessage = `Directions opened successfully!\n\nRoute from your location to the property.\nYour coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}\nAccuracy: ${Math.round(accuracy)} meters\nProperty: ${post.title || 'Rental Property'}\n\nGoogle Maps should open in a new tab with the route.`;
-      toast({
-        title: "Directions Opened",
-        description: "Google Maps should open in a new tab with the route.",
-        variant: "success",
-      });
+
+      // Show location confirmation
+      setShowLocationDialog(true);
+      setIsLoading(false);
       
     } catch (error) {
       let errorMessage = "Failed to get your location.";
@@ -203,9 +171,42 @@ function SinglePage() {
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLocationConfirm = () => {
+    if (!locationData) return;
+    
+    const { latitude, longitude, accuracy } = locationData;
+    
+    // Open Google Maps with route from user location to property
+    const origin = `${latitude},${longitude}`;
+    const dest = `${post.latitude},${post.longitude}`;
+    const url = `https://www.google.com/maps/dir/${origin}/${dest}`;
+    
+    // Open in new tab
+    window.open(url, '_blank');
+    
+    // Show success message
+    toast({
+      title: "Directions Opened",
+      description: "Google Maps should open in a new tab with the route.",
+      variant: "success",
+    });
+    
+    setShowLocationDialog(false);
+    setLocationData(null);
+  };
+
+  const handleAccuracyConfirm = () => {
+    setShowAccuracyDialog(false);
+    setShowLocationDialog(true);
+  };
+
+  const handleAccuracyCancel = () => {
+    setShowAccuracyDialog(false);
+    setLocationData(null);
   };
 
   return (
@@ -408,6 +409,29 @@ function SinglePage() {
           </div>
         </div>
       </div>
+
+      {/* Modern Confirmation Dialogs */}
+      <ModernConfirmationDialog
+        isOpen={showLocationDialog}
+        onClose={() => setShowLocationDialog(false)}
+        onConfirm={handleLocationConfirm}
+        title="📍 Location Detected!"
+        description={`Your coordinates: ${locationData?.latitude?.toFixed(6)}, ${locationData?.longitude?.toFixed(6)}\nAccuracy: ${Math.round(locationData?.accuracy || 0)} meters\n\nIs this your current location?`}
+        confirmText="Open Directions"
+        cancelText="Try Again"
+        variant="default"
+      />
+
+      <ModernConfirmationDialog
+        isOpen={showAccuracyDialog}
+        onClose={handleAccuracyCancel}
+        onConfirm={handleAccuracyConfirm}
+        title="⚠️ Location Accuracy Warning!"
+        description={`Your current location accuracy is: ${Math.round(locationData?.accuracy || 0)} meters\n\nThis might not be your exact location.\n\nPossible reasons:\n• GPS signal is weak\n• You're indoors\n• Browser location permission is limited\n\nDo you want to continue anyway?`}
+        confirmText="Continue Anyway"
+        cancelText="Cancel"
+        variant="warning"
+      />
     </div>
   );
 }
